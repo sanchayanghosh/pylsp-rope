@@ -140,6 +140,14 @@ def pylsp_code_actions(
             position=info.position,
         ),
     )
+    
+    commands.update(
+            refactoring.CommandMoveObject.get_code_actions(
+                workspace=workspace,
+                document=document,
+                position=info.position
+                )
+            )
 
     return [
         cmd.get_code_action(title=title)

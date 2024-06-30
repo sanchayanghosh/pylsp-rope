@@ -1,5 +1,6 @@
 from pathlib import Path
 from unittest.mock import Mock
+import sys
 
 try:
     from importlib.resources import files as resources_files
@@ -75,3 +76,8 @@ def create_document(workspace, name):
     dest_path.write_text(read_fixture_file(name))
     document_uri = uris.from_fs_path(str(dest_path))
     return Document(document_uri, workspace)
+
+def set_import_path(module_path):
+
+    sys.path.append(module_path)
+

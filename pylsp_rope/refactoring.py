@@ -22,7 +22,8 @@ from pylsp_rope.project import (
     DEFAULT_WORKSPACE_EDIT_FORMAT,
 )
 from pylsp_rope.typing import DocumentUri, CodeActionKind
-
+import rope
+from rope.refactor import move
 
 class Command:
     name: str
@@ -415,3 +416,55 @@ class GenerateCode(Command):
             )
             for generate_kind in ["variable", "function", "class", "module", "package"]
         }
+
+
+class CommandMoveObject(Command):
+
+    name = commands.COMMAND_MOVE
+    kind: typing.CodeActionKind = "refactor.move"
+    document_uri: DocumentUri 
+    global_: bool
+    similar: bool
+    position: typing.Range
+    destination: str
+    _project: rope.base.project.Project
+    source_document: str
+
+    
+    def __call__(self, workspace, destination_document, *args, **kwargs):
+
+        move_changes = self.get_changes(destination_document=destination_document)
+
+        self.perform_action(move_changes=move_changes)
+
+    def get_changes(self, destination_document):
+
+
+        self._project = self.project
+
+
+        resource = self._project.get_resource(self.source_document)
+        destination_resource = self._project.get_resource(destination_document)
+
+
+        move_actor = move.create_move(project=self._project, resource=resource, offset=self.position)
+        
+        move_changes = move_actor.get_changes(destination_resource)
+        
+        return move_changes
+    
+    @classmethod
+    def get_code_actions(cls, workspace, document, position):
+
+        return {
+                "Move Refactor": cls(
+                    workspace=workspace,
+                    source_document=document.uri,
+                    position=position
+                    )
+                }
+
+    def perform_action(self, move_changes):
+
+
+        return self._project.do(move_changes)
